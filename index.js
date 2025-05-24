@@ -17,9 +17,7 @@ app.get('/stream', (req, res) => {
 
   const interval = setInterval(() => {
     res.write(`data: ${JSON.stringify({ message: 'ping' })}\n\n`);
-  }, 10000);
-
-const express = require('express');
+ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -40,7 +38,7 @@ app.get('/stream', (req, res) => {
     res.write(`data: ${JSON.stringify({ message: 'ping' })}\n\n`);
   }, 10000);
 
-req.on('close', () => {
+  req.on('close', () => {
     clearInterval(interval);
     res.end();
   });
@@ -49,3 +47,4 @@ req.on('close', () => {
 app.listen(port, () => {
   console.log(`SSE Server running on port ${port}`);
 });
+
