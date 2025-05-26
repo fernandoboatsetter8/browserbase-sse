@@ -1,31 +1,51 @@
 const express = require('express');
-const cors = require('cors');
+const { Builder } = require('selenium-webdriver');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
 
+// Basic GET endpoint to check the server is live
 app.get('/', (req, res) => {
-  res.send('Browserbase SSE Server is running!');
+  res.send('🚀 Browserbase MCP Agent is up and running!');
 });
 
-app.get('/stream', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+// POST endpoint to run a simple browser task
+app.post('/api/run-task', async (req, res) => {
+  const { url } = req.body;
 
-  const interval = setInterval(() => {
-    res.write(`data: ${JSON.stringify({ message: 'ping' })}\n\n`);
-  }, 10000);
+  if (!url) {
+    return res.status(400).json({ error: 'Missing "url" in request body' 
+});
+  }
 
-  req.on('close', () => {
-    clearInterval(interval);
-    res.end();
-  });
+  try {
+    // Create a Selenium driver connected to Browserbase
+    const driver = await new Builder()
+      .usingServer('http://connect.browserbase.com/webdriver')
+      .forBrowser('chrome')
+      .build();
+
+    // Navigate to the URL
+    await driver.get(url);
+
+    // Get the page title
+    const title = await driver.getTitle();
+
+    // Close the browser
+    await driver.quit();
+
+    // Send back the title as result
+    res.json({ message: 'Navigation successful!', pageTitle: title });
+  } catch (error) {
+    console.error('Error running browser task:', error);
+    res.status(500).json({ error: 'Failed to run browser task' });
+  }
 });
 
+// Start the Express server
 app.listen(port, () => {
-  console.log(`SSE Server running on port ${port}`);
+  console.log(`✅ Server is running on port ${port}`);
 });
 
